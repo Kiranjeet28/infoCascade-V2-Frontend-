@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, X, LogIn, LogOut, UserCircle2 } from "lucide-react";
-import logoAsset from "@/assets/Infocascade.png";
+import { Menu, X, LogIn, LogOut, UserCircle2, Shield } from "lucide-react";
+import logoAsset from "@/assets/infocascade-logo.png.asset.json";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,10 +18,13 @@ const nav = [
   { to: "/feedback", label: "Feedback" },
 ];
 
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, isAuthenticated, isHydrating } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const isAdmin = isAuthenticated && user?.role === "admin";
+  const showAdminLink = !isAuthenticated || isAdmin;
 
   async function handleLogout() {
     setOpen(false);
@@ -42,8 +45,8 @@ export function SiteHeader() {
           onClick={() => setOpen(false)}
           className="flex min-w-0 items-center gap-2 font-display text-lg font-semibold tracking-tight"
         >
-          <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-hero p-1 shadow-soft sm:h-11 sm:w-11">
-            <img src={logoAsset} alt="InfoCascade" className="h-full w-full object-contain" />
+          <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-hero shadow-soft">
+            <img src={logoAsset.url} alt="InfoCascade" className="h-8 w-8 object-cover" />
           </span>
           <span className="truncate">InfoCascade</span>
         </Link>
@@ -63,9 +66,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
-          {isHydrating ? (
-            <div className="hidden h-8 w-28 animate-pulse rounded-full bg-muted/60 sm:block" />
-          ) : isAuthenticated ? (
+          {isAuthenticated ? (
             <div className="hidden items-center gap-2 sm:flex">
               <Link
                 to="/profile"
@@ -90,6 +91,7 @@ export function SiteHeader() {
               <LogIn className="h-3.5 w-3.5" /> Login
             </Link>
           )}
+
 
           <button
             type="button"
@@ -119,11 +121,7 @@ export function SiteHeader() {
               </Link>
             ))}
 
-            {isHydrating ? (
-              <div className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-muted-foreground">
-                Verifying session...
-              </div>
-            ) : isAuthenticated ? (
+            {isAuthenticated ? (
               <>
                 <Link
                   to="/profile"
@@ -141,6 +139,7 @@ export function SiteHeader() {
                   <LogOut className="h-4 w-4" /> Logout
                 </button>
               </>
+
             ) : (
               <>
                 <Link
@@ -160,13 +159,16 @@ export function SiteHeader() {
               </>
             )}
 
-            <Link
-              to="/login"
-              onClick={() => setOpen(false)}
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-center text-xs text-muted-foreground"
-            >
-              Admin Login
-            </Link>
+            {showAdminLink && (
+              <Link
+                to={isAdmin ? "/admin" : "/login"}
+                onClick={() => setOpen(false)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-center text-xs text-muted-foreground"
+              >
+                <Shield className="h-3.5 w-3.5" />
+                {isAdmin ? "Admin Dashboard" : "Admin Login"}
+              </Link>
+            )}
           </nav>
         </div>
       )}
@@ -175,15 +177,17 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
+  const { user, isAuthenticated } = useAuth();
+  const isAdmin = isAuthenticated && user?.role === "admin";
+  const showAdminLink = !isAuthenticated || isAdmin;
   return (
     <footer className="border-t border-border/60 bg-surface">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-10 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
-          <img
-            src={logoAsset}
-            alt="InfoCascade"
-            className="h-10 w-auto shrink-0 rounded-md object-contain shadow-soft"
-          />
+          <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-md bg-hero">
+            <img src={logoAsset.url} alt="InfoCascade" className="h-7 w-7 object-cover" />
+          </span>
+          <span className="font-display font-semibold text-foreground">InfoCascade</span>
           <span>· One stream of trusted campus information.</span>
         </div>
         <div className="flex gap-4">
@@ -193,9 +197,11 @@ export function SiteFooter() {
           <Link to="/timetable" className="hover:text-foreground">
             Timetable
           </Link>
-          <Link to="/login" className="hidden hover:text-foreground md:inline">
-            Admin login
-          </Link>
+          {showAdminLink && (
+            <Link to={isAdmin ? "/admin" : "/login"} className="hidden hover:text-foreground md:inline">
+              {isAdmin ? "Admin dashboard" : "Admin login"}
+            </Link>
+          )}
         </div>
       </div>
     </footer>
