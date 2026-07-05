@@ -260,13 +260,7 @@ function HiringPage() {
 
 
 
-          <div className="rounded-3xl border border-border bg-surface p-6 text-sm text-muted-foreground shadow-soft">
-            Already a member?{" "}
-            <Link to="/student-login" className="font-medium text-foreground underline underline-offset-4">
-              Sign in
-            </Link>{" "}
-            to your student account.
-          </div>
+    
         </div>
       </section>
 
