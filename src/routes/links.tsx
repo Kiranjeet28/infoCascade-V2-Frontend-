@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink, Globe, Megaphone, GraduationCap, BookOpen } from "lucide-react";
+import { ExternalLink, Globe, GraduationCap, BookOpen } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 
 export const Route = createFileRoute("/links")({
   head: () => ({
     meta: [
       { title: "Useful Links — InfoCascade" },
-      { name: "description", content: "Department websites, notices and important GNDEC links." },
+      { name: "description", content: "Verified GNDEC department websites and student portals." },
       { property: "og:title", content: "Useful Links — InfoCascade" },
-      { property: "og:description", content: "Department websites, notices and important GNDEC links." },
+      { property: "og:description", content: "Verified GNDEC department websites and student portals." },
     ],
   }),
   component: LinksPage,
@@ -29,13 +29,6 @@ const departments: LinkItem[] = [
   { label: "Electrical Engineering", url: "https://eed.gndec.ac.in/", desc: "Department of EE" },
   { label: "Information Technology", url: "https://it.gndec.ac.in/", desc: "Department of IT" },
   { label: "Mechanical Engineering", url: "https://mech.gndec.ac.in/", desc: "Department of Mechanical" },
-];
-
-const notices: LinkItem[] = [
-  { label: "GNDEC Official Notices", url: "https://www.gndec.ac.in/notices", desc: "Central notice board" },
-  { label: "Examination Cell", url: "https://www.gndec.ac.in/examination", desc: "Date sheets, results" },
-  { label: "Academic Calendar", url: "https://www.gndec.ac.in/academics", desc: "Sessions, holidays" },
-  { label: "Tenders & Recruitment", url: "https://www.gndec.ac.in/tenders", desc: "Latest openings" },
 ];
 
 const portals: LinkItem[] = [
@@ -98,10 +91,10 @@ function LinksPage() {
             <Globe className="h-3.5 w-3.5 text-accent" /> Quick Links
           </div>
           <h1 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
-            Every GNDEC link, in one place.
+            Verified GNDEC links, in one place.
           </h1>
           <p className="mt-2 text-sm text-muted-foreground md:text-base">
-            Department websites, notice boards and student portals — curated and verified.
+            Department websites and student portals — curated and verified.
           </p>
         </header>
 
@@ -111,12 +104,6 @@ function LinksPage() {
             icon={GraduationCap}
             items={departments}
             accent="bg-accent/15 text-accent"
-          />
-          <LinkGroup
-            title="Notices & Announcements"
-            icon={Megaphone}
-            items={notices}
-            accent="bg-secondary/15 text-secondary"
           />
           <LinkGroup
             title="Portals & Resources"
