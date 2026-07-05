@@ -8,8 +8,12 @@ import { usersApi, type UserRecord } from "@/api/users";
 import { AdminPagination, TableSkeleton } from "@/components/admin-pagination";
 import { DEFAULT_PAGE_SIZE } from "@/api/pagination";
 import { useDebounce } from "@/hooks/use-debounce";
+import { requireAdminAccess } from "@/lib/admin-access";
 
 export const Route = createFileRoute("/admin/users")({
+  beforeLoad: async ({ location }) => {
+    await requireAdminAccess(location.href);
+  },
   component: AdminUsers,
   errorComponent: SectionError,
 });
@@ -96,9 +100,15 @@ function AdminUsers() {
           onChange={(e) => setRole(e.target.value as typeof role)}
           className="rounded-2xl border border-white/10 bg-surface/60 px-3 py-2.5 text-sm outline-none backdrop-blur-xl"
         >
-          <option value="" className="bg-background">All roles</option>
-          <option value="admin" className="bg-background">Admin</option>
-          <option value="student" className="bg-background">Student</option>
+          <option value="" className="bg-background">
+            All roles
+          </option>
+          <option value="admin" className="bg-background">
+            Admin
+          </option>
+          <option value="student" className="bg-background">
+            Student
+          </option>
         </select>
       </div>
 

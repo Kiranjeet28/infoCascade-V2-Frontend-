@@ -28,11 +28,10 @@ function LoginPage() {
     }
     setLoading(true);
     try {
-      const s = await authApi.login({ email: email.trim(), password });
+      await authApi.login({ email: email.trim(), password });
+      const me = await authApi.me();
       toast.success("Signed in");
-      // Role-based redirect per backend contract.
-      if (s.user.role === "admin") navigate({ to: "/admin" });
-      else navigate({ to: "/" });
+      navigate({ to: me.role === "admin" ? "/admin" : "/", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {

@@ -13,16 +13,15 @@ const nav = [
   { to: "/calculator", label: "SGPA" },
   { to: "/links", label: "Links" },
   { to: "/team", label: "Team" },
-  
+
   { to: "/hiring", label: "Hiring" },
   { to: "/feedback", label: "Feedback" },
 ];
 
-
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isHydrating } = useAuth();
 
   async function handleLogout() {
     setOpen(false);
@@ -64,7 +63,9 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
-          {isAuthenticated ? (
+          {isHydrating ? (
+            <div className="hidden h-8 w-28 animate-pulse rounded-full bg-muted/60 sm:block" />
+          ) : isAuthenticated ? (
             <div className="hidden items-center gap-2 sm:flex">
               <Link
                 to="/profile"
@@ -89,7 +90,6 @@ export function SiteHeader() {
               <LogIn className="h-3.5 w-3.5" /> Login
             </Link>
           )}
-
 
           <button
             type="button"
@@ -119,7 +119,11 @@ export function SiteHeader() {
               </Link>
             ))}
 
-            {isAuthenticated ? (
+            {isHydrating ? (
+              <div className="rounded-xl border border-border bg-surface px-4 py-3 text-sm text-muted-foreground">
+                Verifying session...
+              </div>
+            ) : isAuthenticated ? (
               <>
                 <Link
                   to="/profile"
@@ -137,7 +141,6 @@ export function SiteHeader() {
                   <LogOut className="h-4 w-4" /> Logout
                 </button>
               </>
-
             ) : (
               <>
                 <Link

@@ -1,5 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { authApi, getStoredUser, setStoredUser, type AuthRole } from "@/api/auth";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { authApi, setStoredUser, type AuthRole } from "@/api/auth";
 import { setAuthToken } from "@/api/client";
 import type { UserRecord } from "@/api/users";
 
@@ -8,26 +16,26 @@ export type AuthUser = UserRecord & { role: AuthRole };
 interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isHydrating: boolean;
   /** Persist a user (called from login flows). */
   setUser: (u: AuthUser | null) => void;
   /** Clear cached user + token. */
   signOut: () => void;
-  /** Re-read from localStorage. */
+  /** Revalidate the current session against the server. */
   refresh: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUserState] = useState<AuthUser | null>(() => getStoredUser());
+  const [user, setUserState] = useState<AuthUser | null>(null);
+  const [isHydrating, setIsHydrating] = useState(true);
 
-  const refresh = useCallback(() => setUserState(getStoredUser()), []);
-
-  useEffect(() => {
+  const refresh = useCallback(() => {
     let cancelled = false;
 
-    async function verifySession() {
-      if (!getStoredUser()) return;
+    async function revalidateSession() {
+      setIsHydrating(true);
 
       try {
         const currentUser = await authApi.me();
@@ -38,15 +46,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setStoredUser(null);
           setUserState(null);
         }
+      } finally {
+        if (!cancelled) setIsHydrating(false);
       }
     }
 
-    verifySession();
+    void revalidateSession();
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const cleanup = refresh();
+    return cleanup;
+  }, [refresh]);
 
   useEffect(() => {
     window.addEventListener("infocascade:auth", refresh);
@@ -60,17 +75,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setUser = useCallback((u: AuthUser | null) => {
     setStoredUser(u);
     setUserState(u);
+    setIsHydrating(false);
   }, []);
 
   const signOut = useCallback(() => {
     setAuthToken(null);
     setStoredUser(null);
     setUserState(null);
+    setIsHydrating(false);
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isAuthenticated: !!user, setUser, signOut, refresh }),
-    [user, setUser, signOut, refresh],
+    () => ({ user, isAuthenticated: !!user, isHydrating, setUser, signOut, refresh }),
+    [user, isHydrating, setUser, signOut, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

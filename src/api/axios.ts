@@ -2,6 +2,9 @@
 // Reads the JWT from localStorage["token"] and attaches it as a Bearer token.
 import axios, { AxiosError } from "axios";
 import { BASE_URL as CONFIG_BASE_URL } from "./config";
+import { toast } from "sonner";
+import { queryClient } from "@/lib/query-client";
+import { getAppRouter } from "@/lib/router-registry";
 
 export const BASE_URL: string = CONFIG_BASE_URL;
 
@@ -30,7 +33,10 @@ api.interceptors.response.use(
   (err: AxiosError) => {
     if (typeof window !== "undefined" && err.response?.status === 401) {
       const url = (err.config?.url ?? "").toString();
-      const isAuthCall = url.includes("/api/auth/login") || url.includes("/api/auth/register");
+      const isAuthCall =
+        url.includes("/api/auth/login") ||
+        url.includes("/api/auth/register") ||
+        url.includes("/api/auth/me");
       if (!isAuthCall) {
         window.localStorage.removeItem(TOKEN_STORAGE_KEY);
         window.localStorage.removeItem(USER_STORAGE_KEY);
@@ -38,6 +44,29 @@ api.interceptors.response.use(
         const path = window.location.pathname;
         if (path !== "/login" && path !== "/student-login") {
           window.location.replace("/login");
+        }
+      }
+    }
+
+    if (typeof window !== "undefined" && err.response?.status === 403) {
+      const url = (err.config?.url ?? "").toString();
+      const isAuthCall =
+        url.includes("/api/auth/login") ||
+        url.includes("/api/auth/register") ||
+        url.includes("/api/auth/me");
+      if (!isAuthCall) {
+        window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+        window.localStorage.removeItem(USER_STORAGE_KEY);
+        window.dispatchEvent(new Event("infocascade:auth"));
+        queryClient.clear();
+        toast.error("Access denied. Please sign in again.");
+
+        const router = getAppRouter();
+        if (router) {
+          router.invalidate();
+          void router.navigate({ to: "/", replace: true });
+        } else {
+          window.location.replace("/");
         }
       }
     }
@@ -49,12 +78,7 @@ api.interceptors.response.use(
 export function extractErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
     const ax = err as AxiosError<{ message?: string; error?: string }>;
-    return (
-      ax.response?.data?.message ??
-      ax.response?.data?.error ??
-      ax.message ??
-      "Request failed"
-    );
+    return ax.response?.data?.message ?? ax.response?.data?.error ?? ax.message ?? "Request failed";
   }
   if (err instanceof Error) return err.message;
   return "Request failed";

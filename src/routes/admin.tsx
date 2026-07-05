@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { authApi } from "@/api/auth";
+import { requireAdminAccess } from "@/lib/admin-access";
 
 function AdminSectionError({ error, reset }: { error: Error; reset: () => void }) {
   return (
@@ -57,21 +58,12 @@ export const Route = createFileRoute("/admin")({
     ],
   }),
   beforeLoad: async ({ location }) => {
-    if (typeof window === "undefined") return;
-
-    const user = await authApi.me().catch(() => null);
-    if (!user || user.role !== "admin") {
-      throw redirect({
-        to: "/login",
-        search: { redirect: location.href } as never,
-      });
-    }
+    await requireAdminAccess(location.href);
   },
   pendingComponent: AdminAccessPending,
   component: AdminLayout,
   errorComponent: AdminSectionError,
 });
-
 
 const items: { to: string; label: string; icon: typeof Megaphone; exact?: boolean }[] = [
   { to: "/admin/notices", label: "Notices", icon: Megaphone },
@@ -88,10 +80,7 @@ function AdminLayout() {
   return (
     <div className="dark min-h-screen bg-background text-foreground">
       {/* Ambient gradients */}
-      <div
-        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-        aria-hidden
-      >
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
         <div className="absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-mint-gradient opacity-20 blur-3xl" />
         <div className="absolute right-0 top-1/3 h-[460px] w-[460px] rounded-full bg-hero opacity-30 blur-3xl" />
       </div>
@@ -113,10 +102,11 @@ function AdminLayout() {
                 <Link
                   key={it.to}
                   to={it.to}
-                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${active
+                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                    active
                       ? "bg-white/10 text-foreground"
                       : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                    }`}
+                  }`}
                 >
                   <it.icon className="h-4 w-4" />
                   {it.label}
@@ -131,7 +121,7 @@ function AdminLayout() {
               onClick={async () => {
                 await authApi.logout();
                 toast.success("Signed out");
-                navigate({ to: "/login" });
+                navigate({ to: "/login", replace: true });
               }}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium transition hover:bg-white/10"
             >
@@ -155,8 +145,9 @@ function AdminLayout() {
                 <Link
                   key={it.to}
                   to={it.to}
-                  className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium transition ${active ? "bg-white/10 text-foreground" : "text-muted-foreground"
-                    }`}
+                  className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium transition ${
+                    active ? "bg-white/10 text-foreground" : "text-muted-foreground"
+                  }`}
                 >
                   <it.icon className="h-4 w-4" />
                   {it.label}

@@ -8,8 +8,12 @@ import { feedbackApi } from "@/api/feedback";
 import { AdminPagination } from "@/components/admin-pagination";
 import { DEFAULT_PAGE_SIZE } from "@/api/pagination";
 import { useDebounce } from "@/hooks/use-debounce";
+import { requireAdminAccess } from "@/lib/admin-access";
 
 export const Route = createFileRoute("/admin/feedback")({
+  beforeLoad: async ({ location }) => {
+    await requireAdminAccess(location.href);
+  },
   component: AdminFeedback,
   errorComponent: SectionError,
 });

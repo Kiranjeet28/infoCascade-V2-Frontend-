@@ -1,5 +1,6 @@
 import { requestRaw, setAuthToken, request } from "./client";
 import type { UserRecord } from "./users";
+import { queryClient } from "@/lib/query-client";
 
 export interface LoginInput {
   email: string;
@@ -102,6 +103,7 @@ export const authApi = {
     request<{ ok: true }>(`/api/auth/logout`, { method: "POST" })
       .catch(() => ({ ok: true as const }))
       .finally(() => {
+        queryClient.clear();
         setAuthToken(null);
         setStoredUser(null);
       }),

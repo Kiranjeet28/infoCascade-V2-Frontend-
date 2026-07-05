@@ -2,14 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  AlertCircle,
-  Loader2,
-  LogOut,
-  Mail,
-  ShieldCheck,
-  UserCircle2,
-} from "lucide-react";
+import { AlertCircle, Loader2, LogOut, Mail, ShieldCheck, UserCircle2 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { authApi } from "@/api/auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,16 +19,21 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isHydrating } = useAuth();
 
   useEffect(() => {
+    if (isHydrating) return;
     if (!isAuthenticated) navigate({ to: "/student-login" });
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isHydrating, navigate]);
 
-  const { data: me, isLoading, error } = useQuery({
+  const {
+    data: me,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["auth", "me"],
     queryFn: () => authApi.me(),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !isHydrating,
   });
 
   async function handleLogout() {
@@ -49,6 +47,7 @@ function ProfilePage() {
   }
 
   if (!isAuthenticated) return null;
+  if (isHydrating) return null;
 
   const name = me?.name ?? user?.name ?? "Your profile";
   const email = me?.email ?? user?.email ?? "";
@@ -70,9 +69,7 @@ function ProfilePage() {
                   <ShieldCheck className="h-3 w-3 text-accent" />
                   {user?.role === "admin" ? "Administrator" : "Student account"}
                 </span>
-                <h1 className="mt-2 font-display text-3xl font-semibold md:text-4xl">
-                  {name}
-                </h1>
+                <h1 className="mt-2 font-display text-3xl font-semibold md:text-4xl">{name}</h1>
                 <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Mail className="h-3.5 w-3.5" /> {email}
                 </p>

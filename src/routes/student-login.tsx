@@ -68,9 +68,10 @@ function StudentAuthPage() {
     try {
       // Try to sign in first.
       try {
-        const s = await authApi.login(parsed.data);
+        await authApi.login(parsed.data);
+        const me = await authApi.me();
         toast.success("Signed in. Welcome back!");
-        navigate({ to: s.user.role === "admin" ? "/admin" : "/" });
+        navigate({ to: me.role === "admin" ? "/admin" : "/", replace: true });
         return;
       } catch (err) {
         if (!isMissingAccountError(err)) throw err;
@@ -88,8 +89,9 @@ function StudentAuthPage() {
       } catch {
         /* already logged in via register token */
       }
+      const me = await authApi.me();
       toast.success("Account created. Welcome!");
-      navigate({ to: "/" });
+      navigate({ to: me.role === "admin" ? "/admin" : "/", replace: true });
     } catch (err) {
       const msg =
         err instanceof ApiError
@@ -106,7 +108,10 @@ function StudentAuthPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="absolute inset-0 grid-bg opacity-60" aria-hidden />
-      <div className="absolute -right-40 -top-40 h-[460px] w-[460px] rounded-full bg-mint-gradient opacity-25 blur-3xl" aria-hidden />
+      <div
+        className="absolute -right-40 -top-40 h-[460px] w-[460px] rounded-full bg-mint-gradient opacity-25 blur-3xl"
+        aria-hidden
+      />
 
       <div className="relative mx-auto flex min-h-screen max-w-md flex-col px-6 py-8">
         <Link
@@ -143,9 +148,7 @@ function StudentAuthPage() {
                   className="w-full bg-transparent text-sm outline-none"
                 />
               </div>
-              {errors.email && (
-                <p className="mt-1 text-xs text-destructive">{errors.email}</p>
-              )}
+              {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
             </label>
 
             <label className="block">
