@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X, LogIn, LogOut, UserCircle2 } from "lucide-react";
-import logoAsset from "@/assets/infocascade-logo.png.asset.json";
+import logoAsset from "@/assets/Infocascade.png";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -42,8 +42,8 @@ export function SiteHeader() {
           onClick={() => setOpen(false)}
           className="flex min-w-0 items-center gap-2 font-display text-lg font-semibold tracking-tight"
         >
-          <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-hero shadow-soft">
-            <img src={logoAsset.url} alt="InfoCascade" className="h-8 w-8 object-cover" />
+          <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-hero p-1 shadow-soft sm:h-11 sm:w-11">
+            <img src={logoAsset} alt="InfoCascade" className="h-full w-full object-contain" />
           </span>
           <span className="truncate">InfoCascade</span>
         </Link>
@@ -179,8 +179,8 @@ export function SiteFooter() {
     <footer className="border-t border-border/60 bg-surface">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-10 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
-          <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-md bg-hero">
-            <img src={logoAsset.url} alt="InfoCascade" className="h-7 w-7 object-cover" />
+          <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-md bg-hero p-0.5">
+            <img src={logoAsset} alt="InfoCascade" className="h-full w-full object-contain" />
           </span>
           <span className="font-display font-semibold text-foreground">InfoCascade</span>
           <span>· One stream of trusted campus information.</span>
