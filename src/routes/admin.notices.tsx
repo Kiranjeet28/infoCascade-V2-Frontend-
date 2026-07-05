@@ -8,12 +8,9 @@ import { noticesApi, type Notice, type NoticeDraft } from "@/api/notices";
 import { AdminPagination, TableSkeleton } from "@/components/admin-pagination";
 import { DEFAULT_PAGE_SIZE } from "@/api/pagination";
 import { useDebounce } from "@/hooks/use-debounce";
-import { requireAdminAccess } from "@/lib/admin-access";
+
 
 export const Route = createFileRoute("/admin/notices")({
-  beforeLoad: async ({ location }) => {
-    await requireAdminAccess(location.href);
-  },
   component: AdminNotices,
   errorComponent: SectionError,
 });
@@ -40,8 +37,7 @@ function AdminNotices() {
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState<Notice | null>(null);
   const [draft, setDraft] = useState<NoticeDraft>(emptyDraft());
-  const [mode, setMode] = useState<"manual" | "advanced">("manual");
-  const [manualBody, setManualBody] = useState("");
+
 
   useEffect(() => {
     setPage(1);
@@ -67,7 +63,6 @@ function AdminNotices() {
       invalidate();
       setOpenForm(false);
       setDraft(emptyDraft());
-      setManualBody("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -90,9 +85,10 @@ function AdminNotices() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+
+
   function startEdit(n: Notice) {
     setEditing(n);
-    setMode("advanced");
     setDraft({
       title: n.title,
       author: n.author,
@@ -103,38 +99,14 @@ function AdminNotices() {
     setOpenForm(true);
   }
 
-  function escapeHtml(s: string) {
-    return s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
-
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    let payload = draft;
-    if (mode === "manual" && !editing) {
-      if (!draft.title.trim() || !manualBody.trim()) {
-        toast.error("Title and message are required.");
-        return;
-      }
-      const html = manualBody
-        .split(/\n{2,}/)
-        .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`)
-        .join("\n");
-      payload = {
-        ...draft,
-        author: draft.author.trim() || "Admin",
-        url: draft.url.trim() || `manual://notice-${Date.now()}`,
-        htmlContent: html,
-      };
-    } else if (!draft.title.trim() || !draft.url.trim() || !draft.htmlContent.trim()) {
+    if (!draft.title.trim() || !draft.url.trim() || !draft.htmlContent.trim()) {
       toast.error("Title, URL and HTML content are required.");
       return;
     }
-    if (editing) updateMut.mutate({ id: editing.id, d: payload });
-    else createMut.mutate(payload);
+    if (editing) updateMut.mutate({ id: editing.id, d: draft });
+    else createMut.mutate(draft);
   }
 
   const busy = list.isFetching || createMut.isPending || updateMut.isPending || deleteMut.isPending;
@@ -148,12 +120,11 @@ function AdminNotices() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
+
             type="button"
             onClick={() => {
               setEditing(null);
               setDraft(emptyDraft());
-              setManualBody("");
-              setMode("manual");
               setOpenForm(true);
             }}
             className="inline-flex items-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-accent-foreground"
@@ -162,6 +133,8 @@ function AdminNotices() {
           </button>
         </div>
       </header>
+
+
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-surface/60 px-4 py-2.5 backdrop-blur-xl">
@@ -178,12 +151,8 @@ function AdminNotices() {
           onChange={(e) => setSort(e.target.value as typeof sort)}
           className="rounded-2xl border border-white/10 bg-surface/60 px-3 py-2.5 text-sm outline-none backdrop-blur-xl"
         >
-          <option value="latest" className="bg-background">
-            Latest first
-          </option>
-          <option value="oldest" className="bg-background">
-            Oldest first
-          </option>
+          <option value="latest" className="bg-background">Latest first</option>
+          <option value="oldest" className="bg-background">Oldest first</option>
         </select>
       </div>
 
@@ -218,65 +187,14 @@ function AdminNotices() {
             </button>
           </div>
 
-          {!editing && (
-            <div className="inline-flex w-fit rounded-xl border border-white/10 bg-background/40 p-1 text-xs">
-              <button
-                type="button"
-                onClick={() => setMode("manual")}
-                className={`rounded-lg px-3 py-1.5 transition ${mode === "manual" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Manual entry
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("advanced")}
-                className={`rounded-lg px-3 py-1.5 transition ${mode === "advanced" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Advanced (HTML + URL)
-              </button>
-            </div>
-          )}
-
-          <AdminInput
-            label="Title"
-            value={draft.title}
-            onChange={(v) => setDraft({ ...draft, title: v })}
-          />
+          <AdminInput label="Title" value={draft.title} onChange={(v) => setDraft({ ...draft, title: v })} />
           <div className="grid gap-3 md:grid-cols-2">
-            <AdminInput
-              label="Author"
-              value={draft.author}
-              onChange={(v) => setDraft({ ...draft, author: v })}
-            />
-            <AdminInput
-              label="Date"
-              value={draft.date}
-              onChange={(v) => setDraft({ ...draft, date: v })}
-            />
+            <AdminInput label="Author" value={draft.author} onChange={(v) => setDraft({ ...draft, author: v })} />
+            <AdminInput label="Date" value={draft.date} onChange={(v) => setDraft({ ...draft, date: v })} />
           </div>
 
-          {mode === "manual" && !editing ? (
-            <AdminTextarea
-              label="Message (plain text — line breaks become paragraphs)"
-              value={manualBody}
-              onChange={setManualBody}
-              rows={8}
-            />
-          ) : (
-            <>
-              <AdminInput
-                label="Source URL (unique)"
-                value={draft.url}
-                onChange={(v) => setDraft({ ...draft, url: v })}
-              />
-              <AdminTextarea
-                label="HTML content"
-                value={draft.htmlContent}
-                onChange={(v) => setDraft({ ...draft, htmlContent: v })}
-                rows={8}
-              />
-            </>
-          )}
+          <AdminInput label="Source URL (unique)" value={draft.url} onChange={(v) => setDraft({ ...draft, url: v })} />
+          <AdminTextarea label="HTML content" value={draft.htmlContent} onChange={(v) => setDraft({ ...draft, htmlContent: v })} rows={8} />
           <div className="flex justify-end gap-2">
             <button
               type="submit"
@@ -284,12 +202,8 @@ function AdminNotices() {
               className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-accent-foreground disabled:opacity-60"
             >
               {editing
-                ? updateMut.isPending
-                  ? "Saving…"
-                  : "Save changes"
-                : createMut.isPending
-                  ? "Publishing…"
-                  : "Publish"}
+                ? updateMut.isPending ? "Saving…" : "Save changes"
+                : createMut.isPending ? "Publishing…" : "Publish"}
             </button>
           </div>
         </form>
@@ -366,15 +280,7 @@ function AdminNotices() {
   );
 }
 
-function AdminInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function AdminInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
