@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertCircle, Loader2, LogOut, Mail, ShieldCheck, UserCircle2 } from "lucide-react";
+import { LogOut, Mail, ShieldCheck, UserCircle2 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { authApi } from "@/api/auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,16 +25,6 @@ function ProfilePage() {
     if (!isAuthenticated) navigate({ to: "/student-login" });
   }, [isAuthenticated, isHydrating, navigate]);
 
-  const {
-    data: me,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: () => authApi.me(),
-    enabled: isAuthenticated && !isHydrating,
-  });
-
   async function handleLogout() {
     try {
       await authApi.logout();
@@ -49,8 +38,8 @@ function ProfilePage() {
   if (!isAuthenticated) return null;
   if (isHydrating) return null;
 
-  const name = me?.name ?? user?.name ?? "Your profile";
-  const email = me?.email ?? user?.email ?? "";
+  const name = user?.name ?? "Your profile";
+  const email = user?.email ?? "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,24 +76,11 @@ function ProfilePage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-6 py-12">
-        {isLoading && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading your details…
-          </div>
-        )}
-        {error && (
-          <div className="flex items-center gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-            <AlertCircle className="h-4 w-4" /> Could not load profile.
-          </div>
-        )}
-
-        {!isLoading && me && (
-          <div className="grid gap-4 rounded-3xl border border-border bg-surface p-6 shadow-soft md:grid-cols-2 md:p-8">
-            <Info label="Full name" value={me.name} />
-            <Info label="Email" value={me.email} />
-            <Info label="Branch" value={me.branch} />
-          </div>
-        )}
+        <div className="grid gap-4 rounded-3xl border border-border bg-surface p-6 shadow-soft md:grid-cols-2 md:p-8">
+          <Info label="Full name" value={user?.name} />
+          <Info label="Email" value={user?.email} />
+          <Info label="Branch" value={user?.branch} />
+        </div>
       </section>
 
       <SiteFooter />

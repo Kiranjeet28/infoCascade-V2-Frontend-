@@ -7,8 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { authApi, setStoredUser, type AuthRole } from "@/api/auth";
-import { setAuthToken } from "@/api/client";
+import { bootstrapAuthSession, clearStoredSession, getStoredUser, setStoredUser, type AuthRole } from "@/api/auth";
 import type { UserRecord } from "@/api/users";
 
 export type AuthUser = UserRecord & { role: AuthRole };
@@ -38,12 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsHydrating(true);
 
       try {
-        const currentUser = await authApi.me();
-        if (!cancelled) setUserState(currentUser);
+        const session = await bootstrapAuthSession();
+        if (!cancelled) {
+          setUserState(session?.user ?? null);
+        }
       } catch {
         if (!cancelled) {
-          setAuthToken(null);
-          setStoredUser(null);
+          clearStoredSession({ notify: false });
           setUserState(null);
         }
       } finally {
@@ -64,13 +64,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   useEffect(() => {
-    window.addEventListener("infocascade:auth", refresh);
-    window.addEventListener("storage", refresh);
-    return () => {
-      window.removeEventListener("infocascade:auth", refresh);
-      window.removeEventListener("storage", refresh);
+    const syncFromStorage = () => {
+      const storedUser = getStoredUser();
+      setUserState(storedUser);
+      setIsHydrating(false);
     };
-  }, [refresh]);
+
+    window.addEventListener("infocascade:auth", syncFromStorage);
+    window.addEventListener("storage", syncFromStorage);
+    return () => {
+      window.removeEventListener("infocascade:auth", syncFromStorage);
+      window.removeEventListener("storage", syncFromStorage);
+    };
+  }, []);
 
   const setUser = useCallback((u: AuthUser | null) => {
     setStoredUser(u);
@@ -79,8 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(() => {
-    setAuthToken(null);
-    setStoredUser(null);
+    clearStoredSession({ notify: true, clearQueryCache: true });
     setUserState(null);
     setIsHydrating(false);
   }, []);

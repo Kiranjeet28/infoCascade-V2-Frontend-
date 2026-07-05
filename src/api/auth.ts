@@ -1,4 +1,4 @@
-import { requestRaw, setAuthToken, request } from "./client";
+import { requestRaw, setAuthToken, request, getAuthToken, ApiError } from "./client";
 import type { UserRecord } from "./users";
 import { queryClient } from "@/lib/query-client";
 
@@ -31,6 +31,9 @@ interface RawAuthResponse {
 }
 
 const USER_KEY = "user";
+let authSessionPromise: Promise<AuthSession | null> | null = null;
+let authSessionToken: string | null = null;
+let authSessionCache: AuthSession | null = null;
 
 export function getStoredUser(): (UserRecord & { role: AuthRole }) | null {
   if (typeof window === "undefined") return null;
@@ -43,11 +46,29 @@ export function getStoredUser(): (UserRecord & { role: AuthRole }) | null {
   }
 }
 
-export function setStoredUser(u: (UserRecord & { role: AuthRole }) | null) {
+export function setStoredUser(u: (UserRecord & { role: AuthRole }) | null, notify = true) {
   if (typeof window === "undefined") return;
   if (u) window.localStorage.setItem(USER_KEY, JSON.stringify(u));
   else window.localStorage.removeItem(USER_KEY);
-  window.dispatchEvent(new Event("infocascade:auth"));
+  if (notify) window.dispatchEvent(new Event("infocascade:auth"));
+}
+
+export function clearStoredSession(options: { notify?: boolean; clearQueryCache?: boolean } = {}) {
+  const { notify = true, clearQueryCache = false } = options;
+  if (typeof window === "undefined") return;
+  setAuthToken(null);
+  setStoredUser(null, false);
+  authSessionPromise = null;
+  authSessionToken = null;
+  authSessionCache = null;
+  if (notify) window.dispatchEvent(new Event("infocascade:auth"));
+  if (clearQueryCache) queryClient.clear();
+}
+
+function cacheAuthSession(session: AuthSession) {
+  authSessionToken = session.token;
+  authSessionCache = session;
+  authSessionPromise = null;
 }
 
 function normalizeSession(raw: RawAuthResponse, fallbackRole: AuthRole): AuthSession {
@@ -77,7 +98,51 @@ async function doLogin(input: LoginInput): Promise<AuthSession> {
   const session = normalizeSession(raw, "student");
   setAuthToken(session.token);
   setStoredUser(session.user);
+  cacheAuthSession(session);
   return session;
+}
+
+export async function bootstrapAuthSession(): Promise<AuthSession | null> {
+  if (typeof window === "undefined") return null;
+
+  const token = getAuthToken();
+  if (!token) {
+    authSessionPromise = null;
+    authSessionToken = null;
+    authSessionCache = null;
+    return null;
+  }
+
+  if (authSessionCache && authSessionToken === token) {
+    return authSessionCache;
+  }
+
+  if (authSessionPromise && authSessionToken === token) {
+    return authSessionPromise;
+  }
+
+  authSessionToken = token;
+  authSessionPromise = request<UserRecord & { role: AuthRole }>(`/api/auth/me`)
+    .then((user) => {
+      const session = { token, user };
+      authSessionCache = session;
+      setStoredUser(user, false);
+      return session;
+    })
+    .catch((err) => {
+      authSessionCache = null;
+      authSessionToken = null;
+      if (err instanceof ApiError && err.status === 401) {
+        clearStoredSession({ notify: false, clearQueryCache: true });
+        return null;
+      }
+      throw err;
+    })
+    .finally(() => {
+      authSessionPromise = null;
+    });
+
+  return authSessionPromise;
 }
 
 export const authApi = {
@@ -95,6 +160,7 @@ export const authApi = {
       const session = normalizeSession(raw, "student");
       setAuthToken(session.token);
       setStoredUser(session.user);
+      cacheAuthSession(session);
     }
     return { ok: true as const };
   },
@@ -103,9 +169,7 @@ export const authApi = {
     request<{ ok: true }>(`/api/auth/logout`, { method: "POST" })
       .catch(() => ({ ok: true as const }))
       .finally(() => {
-        queryClient.clear();
-        setAuthToken(null);
-        setStoredUser(null);
+        clearStoredSession({ notify: true, clearQueryCache: true });
       }),
 
   /** Authoritative session check; use this for role-sensitive access control. */

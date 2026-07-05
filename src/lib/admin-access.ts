@@ -1,15 +1,16 @@
 import { redirect } from "@tanstack/react-router";
-import { authApi } from "@/api/auth";
+import { bootstrapAuthSession, clearStoredSession } from "@/api/auth";
 
 export async function requireAdminAccess(redirectTo: string) {
   try {
-    const me = await authApi.me();
-    if (me.role !== "admin") {
+    const session = await bootstrapAuthSession();
+    if (!session || session.user.role !== "admin") {
+      clearStoredSession({ notify: false });
       throw new Error("Not an admin");
     }
-    return me;
+    return session.user;
   } catch {
-    await authApi.logout().catch(() => {});
+    clearStoredSession({ notify: false, clearQueryCache: true });
     throw redirect({
       to: "/login",
       search: { redirect: redirectTo } as never,

@@ -68,10 +68,9 @@ function StudentAuthPage() {
     try {
       // Try to sign in first.
       try {
-        await authApi.login(parsed.data);
-        const me = await authApi.me();
+        const session = await authApi.login(parsed.data);
         toast.success("Signed in. Welcome back!");
-        navigate({ to: me.role === "admin" ? "/admin" : "/", replace: true });
+        navigate({ to: session.user.role === "admin" ? "/admin" : "/", replace: true });
         return;
       } catch (err) {
         if (!isMissingAccountError(err)) throw err;
@@ -89,9 +88,8 @@ function StudentAuthPage() {
       } catch {
         /* already logged in via register token */
       }
-      const me = await authApi.me();
       toast.success("Account created. Welcome!");
-      navigate({ to: me.role === "admin" ? "/admin" : "/", replace: true });
+      navigate({ to: "/", replace: true });
     } catch (err) {
       const msg =
         err instanceof ApiError
