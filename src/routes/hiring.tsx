@@ -203,7 +203,7 @@ function HiringPage() {
                   onChange={(v) => set("batch", v)}
                   options={[...HIRING_BATCHES]}
                   error={errors.batch}
-                  
+
                 />
               </div>
               <Field
@@ -242,7 +242,7 @@ function HiringPage() {
             </div>
             <div className="mt-5 grid gap-2">
               <a
-                href="https://www.linkedin.com/"
+                href="https://www.linkedin.com/in/kiranjeet28/"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-medium transition hover:bg-muted"
@@ -250,7 +250,7 @@ function HiringPage() {
                 <Linkedin className="h-4 w-4 text-accent" /> LinkedIn
               </a>
               <a
-                href="mailto:kiranjeet@gndec.ac.in"
+                href="mailto:kiranjeetkour144@gmail.com"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-sm font-medium text-background transition hover:opacity-90"
               >
                 <Mail className="h-4 w-4" /> Email Kiranjeet
