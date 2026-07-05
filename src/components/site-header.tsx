@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X, LogIn, LogOut, UserCircle2, Shield } from "lucide-react";
-import logoAsset from "@/assets/infocascade-logo.png.asset.json";
+import logoAsset from "@/assets/Infocascade.png";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,11 +13,9 @@ const nav = [
   { to: "/calculator", label: "SGPA" },
   { to: "/links", label: "Links" },
   { to: "/team", label: "Team" },
-
   { to: "/hiring", label: "Hiring" },
   { to: "/feedback", label: "Feedback" },
 ];
-
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -46,7 +44,7 @@ export function SiteHeader() {
           className="flex min-w-0 items-center gap-2 font-display text-lg font-semibold tracking-tight"
         >
           <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg bg-hero shadow-soft">
-            <img src={logoAsset.url} alt="InfoCascade" className="h-8 w-8 object-cover" />
+            <img src={logoAsset} alt="InfoCascade" className="h-8 w-8 object-cover" />
           </span>
           <span className="truncate">InfoCascade</span>
         </Link>
@@ -91,7 +89,6 @@ export function SiteHeader() {
               <LogIn className="h-3.5 w-3.5" /> Login
             </Link>
           )}
-
 
           <button
             type="button"
@@ -139,7 +136,6 @@ export function SiteHeader() {
                   <LogOut className="h-4 w-4" /> Logout
                 </button>
               </>
-
             ) : (
               <>
                 <Link
@@ -185,7 +181,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-10 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
           <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-md bg-hero">
-            <img src={logoAsset.url} alt="InfoCascade" className="h-7 w-7 object-cover" />
+            <img src={logoAsset} alt="InfoCascade" className="h-7 w-7 object-cover" />
           </span>
           <span className="font-display font-semibold text-foreground">InfoCascade</span>
           <span>· One stream of trusted campus information.</span>
@@ -198,7 +194,10 @@ export function SiteFooter() {
             Timetable
           </Link>
           {showAdminLink && (
-            <Link to={isAdmin ? "/admin" : "/login"} className="hidden hover:text-foreground md:inline">
+            <Link
+              to={isAdmin ? "/admin" : "/login"}
+              className="hidden hover:text-foreground md:inline"
+            >
               {isAdmin ? "Admin dashboard" : "Admin login"}
             </Link>
           )}
