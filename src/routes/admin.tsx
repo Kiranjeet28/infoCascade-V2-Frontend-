@@ -7,6 +7,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import {
+  Loader2,
   LogOut,
   Megaphone,
   MessageSquareHeart,
@@ -16,7 +17,7 @@ import {
   Waves,
 } from "lucide-react";
 import { toast } from "sonner";
-import { authApi, getStoredUser } from "@/api/auth";
+import { authApi } from "@/api/auth";
 
 function AdminSectionError({ error, reset }: { error: Error; reset: () => void }) {
   return (
@@ -38,6 +39,16 @@ function AdminSectionError({ error, reset }: { error: Error; reset: () => void }
   );
 }
 
+function AdminAccessPending() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background text-foreground">
+      <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-surface/70 px-4 py-3 text-sm text-muted-foreground backdrop-blur-xl">
+        <Loader2 className="h-4 w-4 animate-spin" /> Verifying admin access…
+      </div>
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
@@ -45,9 +56,10 @@ export const Route = createFileRoute("/admin")({
       { name: "description", content: "Manage notices, hiring, feedback, users and team." },
     ],
   }),
-  beforeLoad: ({ location }) => {
+  beforeLoad: async ({ location }) => {
     if (typeof window === "undefined") return;
-    const user = getStoredUser();
+
+    const user = await authApi.me().catch(() => null);
     if (!user || user.role !== "admin") {
       throw redirect({
         to: "/login",
@@ -55,6 +67,7 @@ export const Route = createFileRoute("/admin")({
       });
     }
   },
+  pendingComponent: AdminAccessPending,
   component: AdminLayout,
   errorComponent: AdminSectionError,
 });
@@ -100,11 +113,10 @@ function AdminLayout() {
                 <Link
                   key={it.to}
                   to={it.to}
-                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    active
+                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${active
                       ? "bg-white/10 text-foreground"
                       : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <it.icon className="h-4 w-4" />
                   {it.label}
@@ -143,9 +155,8 @@ function AdminLayout() {
                 <Link
                   key={it.to}
                   to={it.to}
-                  className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium transition ${
-                    active ? "bg-white/10 text-foreground" : "text-muted-foreground"
-                  }`}
+                  className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium transition ${active ? "bg-white/10 text-foreground" : "text-muted-foreground"
+                    }`}
                 >
                   <it.icon className="h-4 w-4" />
                   {it.label}

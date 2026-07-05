@@ -106,6 +106,7 @@ export const authApi = {
         setStoredUser(null);
       }),
 
+  /** Authoritative session check; use this for role-sensitive access control. */
   me: () => request<UserRecord & { role: AuthRole }>(`/api/auth/me`),
 
   changePassword: (oldPassword: string, newPassword: string) =>

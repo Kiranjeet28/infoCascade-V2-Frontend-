@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { getStoredUser, setStoredUser, type AuthRole } from "@/api/auth";
+import { authApi, getStoredUser, setStoredUser, type AuthRole } from "@/api/auth";
 import { setAuthToken } from "@/api/client";
 import type { UserRecord } from "@/api/users";
 
@@ -22,6 +22,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<AuthUser | null>(() => getStoredUser());
 
   const refresh = useCallback(() => setUserState(getStoredUser()), []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function verifySession() {
+      if (!getStoredUser()) return;
+
+      try {
+        const currentUser = await authApi.me();
+        if (!cancelled) setUserState(currentUser);
+      } catch {
+        if (!cancelled) {
+          setAuthToken(null);
+          setStoredUser(null);
+          setUserState(null);
+        }
+      }
+    }
+
+    verifySession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     window.addEventListener("infocascade:auth", refresh);
