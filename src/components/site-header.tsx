@@ -179,10 +179,9 @@ export function SiteFooter() {
     <footer className="border-t border-border/60 bg-surface">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-10 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
-          <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-md bg-hero p-0.5">
+          <span className="grid h-10 w-36 shrink-0 place-items-center overflow-hidden rounded-md bg-hero px-2 py-1 shadow-soft">
             <img src={logoAsset} alt="InfoCascade" className="h-full w-full object-contain" />
           </span>
-          <span className="font-display font-semibold text-foreground">InfoCascade</span>
           <span>· One stream of trusted campus information.</span>
         </div>
         <div className="flex gap-4">
