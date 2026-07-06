@@ -28,7 +28,7 @@ const departments: { key: string; label: string }[] = [
   { key: "mechanical", label: "Mechanical Engineering" },
 ];
 
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 interface ClassEntry {
   dayOfClass: string;
@@ -124,11 +124,10 @@ function TimetablePage() {
                   setDept(d.key);
                   setGroup(null);
                 }}
-                className={`rounded-full border px-4 py-1.5 text-sm transition ${
-                  dept === d.key
+                className={`rounded-full border px-4 py-1.5 text-sm transition ${dept === d.key
                     ? "border-foreground bg-foreground text-background"
                     : "border-border bg-surface text-foreground hover:bg-muted"
-                }`}
+                  }`}
               >
                 {d.label}
               </button>
@@ -168,11 +167,10 @@ function TimetablePage() {
               <button
                 key={d}
                 onClick={() => setDay(d)}
-                className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
-                  day === d
+                className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${day === d
                     ? "border-foreground bg-foreground text-background"
                     : "border-border bg-surface text-foreground hover:bg-muted"
-                }`}
+                  }`}
               >
                 {d}
               </button>
