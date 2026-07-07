@@ -30,13 +30,22 @@ const departments: { key: string; label: string }[] = [
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
+interface EntryItem {
+  subject: string | null;
+  teacher: string | null;
+  classRoom: string | null;
+}
+
 interface ClassEntry {
   dayOfClass: string;
   timeOfClass: string;
   data: {
-    subject: string | null;
-    teacher: string | null;
-    classRoom: string | null;
+    // Legacy flat shape (kept for backward compatibility)
+    subject?: string | null;
+    teacher?: string | null;
+    classRoom?: string | null;
+    // New shape from data source
+    entries?: EntryItem[] | null;
     elective?: boolean;
     freeClass?: boolean;
     Lab?: boolean;
@@ -50,19 +59,55 @@ interface TimetableDoc {
   timetable: Record<string, { classes: ClassEntry[] }>;
 }
 
-function classifyType(d: ClassEntry["data"]): "FREE" | "LAB" | "TUT" | "LEC" {
+/**
+ * Class type detection order
+ *
+ * | Condition                                        | Label            |
+ * |--------------------------------------------------|------------------|
+ * | freeClass === true                               | Free             |
+ * | OtherDepartment === true                         | Mandatory        |
+ * | Lab === true                                     | Lab              |
+ * | Tut === true                                     | Tut              |
+ * | elective === true (may have multiple entries)    | Elective         |
+ * | (default)                                        | Lecture          |
+ */
+type ClassType = "FREE" | "MAND" | "LAB" | "TUT" | "ELEC" | "LEC";
+
+function classifyType(d: ClassEntry["data"]): ClassType {
   if (d.freeClass) return "FREE";
+  if (d.OtherDepartment) return "MAND";
   if (d.Lab) return "LAB";
   if (d.Tut) return "TUT";
+  if (d.elective) return "ELEC";
   return "LEC";
 }
 
-const typeStyles: Record<string, string> = {
+const typeStyles: Record<ClassType, string> = {
   FREE: "bg-muted text-muted-foreground",
+  MAND: "bg-destructive/15 text-destructive",
   LAB: "bg-accent/15 text-accent",
   TUT: "bg-secondary/15 text-secondary",
+  ELEC: "bg-primary/15 text-primary",
   LEC: "bg-primary/10 text-primary",
 };
+
+const typeLabels: Record<ClassType, string> = {
+  FREE: "FREE",
+  MAND: "MAND",
+  LAB: "LAB",
+  TUT: "TUT",
+  ELEC: "ELEC",
+  LEC: "LEC",
+};
+
+function getEntries(d: ClassEntry["data"]): EntryItem[] {
+  if (Array.isArray(d.entries) && d.entries.length > 0) return d.entries;
+  if (d.subject || d.teacher || d.classRoom) {
+    return [{ subject: d.subject ?? null, teacher: d.teacher ?? null, classRoom: d.classRoom ?? null }];
+  }
+  return [];
+}
+
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -125,8 +170,8 @@ function TimetablePage() {
                   setGroup(null);
                 }}
                 className={`rounded-full border px-4 py-1.5 text-sm transition ${dept === d.key
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border bg-surface text-foreground hover:bg-muted"
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-surface text-foreground hover:bg-muted"
                   }`}
               >
                 {d.label}
@@ -168,8 +213,8 @@ function TimetablePage() {
                 key={d}
                 onClick={() => setDay(d)}
                 className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${day === d
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border bg-surface text-foreground hover:bg-muted"
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-surface text-foreground hover:bg-muted"
                   }`}
               >
                 {d}
@@ -194,8 +239,13 @@ function TimetablePage() {
               <div className="divide-y divide-border">
                 {periods.map((p, i) => {
                   const t = classifyType(p.data);
-                  const title =
-                    p.data.subject ?? (t === "FREE" ? "Free Period" : "—");
+                  const entries = getEntries(p.data);
+                  const isMand = t === "MAND";
+                  const isElective = t === "ELEC";
+                  const fallbackTitle =
+                    t === "FREE" ? "Free Period" : isMand ? "Mandatory Course" : "—";
+                  const primary = entries[0];
+                  const singleTitle = primary?.subject ?? fallbackTitle;
                   return (
                     <div
                       key={`${p.timeOfClass}-${i}`}
@@ -206,7 +256,7 @@ function TimetablePage() {
                         <span
                           className={`rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide ${typeStyles[t]}`}
                         >
-                          {t}
+                          {typeLabels[t]}
                         </span>
                       </div>
                       <div>
@@ -214,30 +264,57 @@ function TimetablePage() {
                           <span
                             className={`rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide md:hidden ${typeStyles[t]}`}
                           >
-                            {t}
+                            {typeLabels[t]}
                           </span>
                           <div className="font-display text-sm font-semibold uppercase tracking-wide">
-                            {title}
+                            {isElective && entries.length > 1 ? "Elective — choose one" : singleTitle}
                           </div>
                         </div>
-                        {(p.data.teacher || p.data.classRoom) && (
-                          <div className="mt-1 flex flex-wrap gap-4 text-xs text-muted-foreground">
-                            {p.data.teacher && (
-                              <span className="inline-flex items-center gap-1">
-                                <User className="h-3 w-3" /> {p.data.teacher}
-                              </span>
-                            )}
-                            {p.data.classRoom && (
-                              <span className="inline-flex items-center gap-1">
-                                <MapPin className="h-3 w-3" /> {p.data.classRoom}
-                              </span>
-                            )}
-                          </div>
+
+                        {isElective && entries.length > 1 ? (
+                          <ul className="mt-2 space-y-2">
+                            {entries.map((e, idx) => (
+                              <li
+                                key={idx}
+                                className="rounded-lg border border-border bg-surface px-3 py-2"
+                              >
+                                <div className="text-sm font-semibold">{e.subject ?? "—"}</div>
+                                <div className="mt-1 flex flex-wrap gap-4 text-xs text-muted-foreground">
+                                  {e.teacher && (
+                                    <span className="inline-flex items-center gap-1">
+                                      <User className="h-3 w-3" /> {e.teacher}
+                                    </span>
+                                  )}
+                                  {e.classRoom && (
+                                    <span className="inline-flex items-center gap-1">
+                                      <MapPin className="h-3 w-3" /> {e.classRoom}
+                                    </span>
+                                  )}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          primary && (primary.teacher || primary.classRoom) && (
+                            <div className="mt-1 flex flex-wrap gap-4 text-xs text-muted-foreground">
+                              {primary.teacher && (
+                                <span className="inline-flex items-center gap-1">
+                                  <User className="h-3 w-3" /> {primary.teacher}
+                                </span>
+                              )}
+                              {primary.classRoom && (
+                                <span className="inline-flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" /> {primary.classRoom}
+                                </span>
+                              )}
+                            </div>
+                          )
                         )}
                       </div>
                     </div>
                   );
                 })}
+
               </div>
             )}
           </div>
