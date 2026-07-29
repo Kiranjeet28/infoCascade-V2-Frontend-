@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
+import { VisitorCounter } from "@/components/visitor-counter";
 import { noticesApi } from "@/api/notices";
 
 export const Route = createFileRoute("/")({
@@ -86,20 +87,13 @@ function Home() {
               </Link>
             </div>
 
-            <div className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-border pt-6 text-sm">
-              <div>
-                <div className="font-display text-2xl font-semibold">39k+</div>
-                <div className="text-muted-foreground">Total visits</div>
-              </div>
-              <div>
-                <div className="font-display text-2xl font-semibold">8</div>
-                <div className="text-muted-foreground">Departments</div>
-              </div>
-              <div>
-                <div className="font-display text-2xl font-semibold">24/7</div>
-                <div className="text-muted-foreground">Always live</div>
-              </div>
+            <div className="mt-10 flex flex-wrap items-center gap-4 border-t border-border pt-6">
+              <VisitorCounter size="lg" />
+              <p className="max-w-xs text-sm text-muted-foreground">
+                Real-time visitor count powered by our live traffic tracker.
+              </p>
             </div>
+
           </div>
         </div>
       </section>
@@ -161,36 +155,36 @@ function Home() {
         ) : (
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {notices.map((u, index) => (
-            <article
-              key={u.id}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-elevated"
-            >
-              <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${noticeAccents[index % noticeAccents.length]}`} />
-              <div className="flex items-center justify-between">
-                <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
-                  {u.author || "GNDEC"}
-                </span>
-                <span className="text-xs text-muted-foreground">{displayDate(u.date, u.createdAt)}</span>
-              </div>
-              <h3 className="mt-4 font-display text-xl font-semibold leading-snug">
-                {u.title}
-              </h3>
-              <p className="mt-2 text-sm text-muted-foreground">{plainPreview(u.htmlContent)}</p>
-              <div className="mt-6 flex items-center border-t border-border pt-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-2">
-                  <span className="grid h-6 w-6 place-items-center rounded-full bg-hero text-[10px] font-semibold text-primary-foreground">
-                    {(u.author || "GNDEC").split(" ").map((n) => n[0]).join("").slice(0, 2)}
+              <article
+                key={u.id}
+                className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-elevated"
+              >
+                <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${noticeAccents[index % noticeAccents.length]}`} />
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                    {u.author || "GNDEC"}
                   </span>
-                  {u.author || "GNDEC"}
-                </span>
-              </div>
-            </article>
+                  <span className="text-xs text-muted-foreground">{displayDate(u.date, u.createdAt)}</span>
+                </div>
+                <h3 className="mt-4 font-display text-xl font-semibold leading-snug">
+                  {u.title}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">{plainPreview(u.htmlContent)}</p>
+                <div className="mt-6 flex items-center border-t border-border pt-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-hero text-[10px] font-semibold text-primary-foreground">
+                      {(u.author || "GNDEC").split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                    </span>
+                    {u.author || "GNDEC"}
+                  </span>
+                </div>
+              </article>
             ))}
           </div>
         )}
       </section>
 
-      {/* Team teaser */}
+      {/* Team teaser
       <section className="mx-auto max-w-7xl px-6 pb-20">
         <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-border bg-surface p-8 shadow-soft md:flex-row md:p-10">
           <div className="flex items-center gap-4">
@@ -216,7 +210,7 @@ function Home() {
             Meet the team <ArrowUpRight className="h-4 w-4" />
           </Link>
         </div>
-      </section>
+      </section> */}
 
       <SiteFooter />
     </div>
