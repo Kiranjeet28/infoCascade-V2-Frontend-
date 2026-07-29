@@ -7,11 +7,13 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import {
+  Bot,
   Loader2,
   LogOut,
   Megaphone,
   MessageSquareHeart,
   Users,
+  CalendarClock,
   UsersRound,
   UserSquare2,
   Waves,
@@ -71,6 +73,8 @@ const items: { to: string; label: string; icon: typeof Megaphone; exact?: boolea
   { to: "/admin/feedback", label: "Feedback", icon: MessageSquareHeart },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/team", label: "Team", icon: UsersRound },
+  { to: "/admin/agent", label: "Agent", icon: Bot },
+  { to: "/admin/sync-timetable", label: "Sync Timetable", icon: CalendarClock },
 ];
 
 function AdminLayout() {
@@ -102,11 +106,10 @@ function AdminLayout() {
                 <Link
                   key={it.to}
                   to={it.to}
-                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    active
+                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${active
                       ? "bg-white/10 text-foreground"
                       : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <it.icon className="h-4 w-4" />
                   {it.label}
@@ -145,9 +148,8 @@ function AdminLayout() {
                 <Link
                   key={it.to}
                   to={it.to}
-                  className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium transition ${
-                    active ? "bg-white/10 text-foreground" : "text-muted-foreground"
-                  }`}
+                  className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-[10px] font-medium transition ${active ? "bg-white/10 text-foreground" : "text-muted-foreground"
+                    }`}
                 >
                   <it.icon className="h-4 w-4" />
                   {it.label}
