@@ -10,7 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import logoAsset from "@/assets/Infocascade.png";
+import logoAsset from "@/assets/infocascade-logo.png.asset.json";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/auth-context";
@@ -93,8 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", type: "image/png", href: logoAsset },
-      { rel: "apple-touch-icon", href: logoAsset },
+      { rel: "icon", type: "image/png", href: logoAsset.url },
     ],
   }),
   shellComponent: RootShell,
@@ -126,9 +125,15 @@ function RootShell({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <script
+          type="text/javascript"
+          src="https://www.freevisitorcounters.com/auth.php?id=bd02debf01bcc52a8175c9e53ae4d42bb90647fe"
+          async
+        />
         <Scripts />
       </body>
     </html>
+
   );
 }
 
