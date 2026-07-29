@@ -1,7 +1,14 @@
+import { useEffect } from "react";
 import { Eye, Users, Activity } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getVisitorStats } from "@/lib/visitor-stats.functions";
+
+const COUNTER_RENDER_URL =
+    "https://www.freevisitorcounters.com/en/counter/render/1607868/t/0";
+
+// Registers one hit per browser page load (the vendor counts image loads).
+let hitRegistered = false;
 
 type VisitorCounterProps = {
     className?: string;
@@ -14,12 +21,29 @@ function formatNumber(n: number): string {
 
 export function VisitorCounter({ className = "", size = "sm" }: VisitorCounterProps) {
     const fetchStats = useServerFn(getVisitorStats);
+    const queryClient = useQueryClient();
     const { data } = useQuery({
         queryKey: ["visitor-stats"],
         queryFn: () => fetchStats(),
         refetchInterval: 60_000,
-        staleTime: 30_000,
+        staleTime: 0,
+        refetchOnWindowFocus: true,
     });
+
+    useEffect(() => {
+        if (hitRegistered) return;
+        hitRegistered = true;
+        const img = new Image();
+        img.onload = () => {
+            // Give the vendor a moment to persist the hit, then re-read live stats.
+            setTimeout(
+                () => queryClient.invalidateQueries({ queryKey: ["visitor-stats"] }),
+                1500,
+            );
+        };
+        img.src = `${COUNTER_RENDER_URL}?t=${Date.now()}`;
+    }, [queryClient]);
+
 
     const today = data?.today ?? 0;
     const all = data?.all ?? 0;

@@ -24,8 +24,11 @@ function extractNumber(html: string, label: string): number {
 export const getVisitorStats = createServerFn({ method: "GET" }).handler(
   async (): Promise<VisitorStats> => {
     const res = await fetch(
-      `https://www.freevisitorcounters.com/en/home/stats/id/${COUNTER_ID}`,
-      { headers: { "user-agent": "Mozilla/5.0 InfoCascade" } },
+      `https://www.freevisitorcounters.com/en/home/stats/id/${COUNTER_ID}?t=${Date.now()}`,
+      {
+        headers: { "user-agent": "Mozilla/5.0 InfoCascade", "cache-control": "no-cache" },
+        cache: "no-store",
+      },
     );
     const html = await res.text();
     return {
